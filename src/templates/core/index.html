@@ -1,0 +1,67 @@
+{% extends "_base.html" %} {% block content %}
+
+{% set names = current_user.email.split('@')[0].split('.') %}
+{% set first_name = names[0] %}
+{% set last_name = names[-1] %}
+<h1 class="text-center">Welcome {{ first_name.capitalize() }} {{ last_name.capitalize() }}!</h1>
+
+<div class="container px-4 py-5">
+  <section>
+    <div class="container px-4 py-5" id="icon-grid">
+      <h2 class="pb-2 border-bottom text-center">Please choose your printer</h2>
+      <div
+        class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-6 g-4 py-5"
+      >
+
+        <div class="col d-flex align-items-start justify-content-center">
+          <a href="http://10.8.1.14:5001" target="_blank" rel="noreferrer">
+            <button type="button" class="btn btn-lg printer-btn">
+              Prenta A
+            </button>
+          </a>
+        </div>
+
+        <div class="col d-flex align-items-start justify-content-center">
+          <a href="http://10.8.1.14:5002" target="_blank" rel="noreferrer">
+            <button type="button" class="btn btn-lg printer-btn">
+              Prenta C
+            </button>
+          </a>
+        </div>
+
+        <div class="col d-flex align-items-start justify-content-center">
+          <a href="http://10.8.1.14:5003" target="_blank" rel="noreferrer">
+            <button type="button" class="btn btn-lg printer-btn">
+              Prenta D
+            </button>
+          </a>
+        </div>
+
+        <div class="col d-flex align-items-start justify-content-center">
+          <a href="http://10.8.1.14:5004" target="_blank" rel="noreferrer">
+            <button type="button" class="btn btn-lg printer-btn">
+              Prenta E
+            </button>
+          </a>
+        </div>
+
+        <div class="col d-flex align-items-start justify-content-center">
+          <a href="http://10.8.1.14:5005" target="_blank" rel="noreferrer">
+            <button type="button" class="btn btn-lg printer-btn">
+              UltiMaker A
+            </button>
+          </a>
+        </div>
+
+        <div class="col d-flex align-items-start justify-content-center">
+          <a href="http://10.8.1.14:5006" target="_blank" rel="noreferrer">
+            <button type="button" class="btn btn-lg printer-btn">
+              UltiMaker B
+            </button>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}

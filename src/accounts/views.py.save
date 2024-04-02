@@ -1,0 +1,246 @@
+from datetime import datetime, timedelta, timezone
+
+from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask_login import current_user, login_required, login_user, logout_user
+from sqlalchemy.orm.exc import NoResultFound
+
+from src import bcrypt, db
+from src.accounts.models import User, OTP
+from src.accounts.token import confirm_token, generate_token, decode_token
+from src.utils.decorators import logout_required
+from src.utils.email import send_email
+
+from .forms import OtpLoginForm, LoginForm, RegisterForm, ResetForm, ForgotPasswordForm
+
+import random
+import pytz
+
+helsinki = pytz.timezone('Europe/Helsinki')
+
+accounts_bp = Blueprint("accounts", __name__)
+
+from flask import Flask
+
+app = Flask(__name__)
+
+@accounts_bp.route("/send_otp", methods=["POST"])
+def send_code():
+    form = OtpLoginForm()
+    if form.validate_on_submit():
+        # Generate OTP
+        otp_code = str(random.randint(100000, 999999))
+        html = render_template("accounts/emails/otp_email.html", otp_code=otp_code)
+        subject = "Verify Your Identity With Email Verification Code"
+        # Send the OTP
+        send_email(subject, form.email.data, html)
+
+        utc_now = datetime.utcnow().replace(tzinfo=pytz.utc)
+
+        # Save OTP to the database
+        try:
+        # Try to find an existing OTP entry for the email
+            otp = OTP.query.filter_by(email=form.email.data).one()
+            # Update the existing entry with new OTP code and expiration
+            otp.otp_code = otp_code
+            otp.created_at = utc_now
+            otp.expires_at = utc_now + timedelta(minutes=15)
+        except NoResultFound:
+            # If no existing entry, create a new one
+            otp = OTP(email=form.email.data, otp_code=otp_code)
+            db.session.add(otp)
+        db.session.commit()
+
+        flash('OTP sent to your email.', 'info')
+    # Stay on the same page to allow user to enter the received OTP
+    return render_template("accounts/forms/otp_login.html", form=form)
+
+
+@accounts_bp.route("/otp_login", methods=['GET', 'POST'])
+def otp_login():
+    form = OtpLoginForm(request.form)
+    if form.validate_on_submit():
+        if request.form.get('action') == 'send_otp':
+            # This will now redirect to the send_code function
+            return send_code()
+        elif request.form.get('action') == 'otp_login':
+            # Validate the OTP
+            otp_entry = OTP.query.filter_by(email=form.email.data, otp_code=form.password.data).first()
+            if otp_entry and datetime.now(helsinki) <= otp_entry.expires_at:
+                # Log the user in and redirect
+                return redirect(url_for("accounts.home"))
+            else:
+                flash('Invalid or expired OTP.', 'danger')
+    return render_template("accounts/forms/otp_login.html", form=form)
+
+
+@accounts_bp.route("/register", methods=["GET", "POST"])
+@logout_required
+def register():
+    form = RegisterForm(request.form)
+    if form.validate_on_submit():
+        user = User(email=form.email.data, password=form.password.data)
+        db.session.add(user)
+        db.session.commit()
+        token = generate_token(user.email)
+        confirm_url = url_for("accounts.confirm_email", token=token, _external=True)
+        html = render_template("accounts/emails/confirm_email.html", confirm_url=confirm_url)
+        subject = "Welcome to 3D Printing in TAMK FieldLab"
+        send_email(subject, user.email, html)
+
+        login_user(user)
+
+        flash("A confirmation email has been sent via email.", "success")
+        return redirect(url_for("accounts.inactive"))
+
+    return render_template("accounts/forms/register.html", form=form)
+
+
+def update_failed_attempts(email):
+    user = User.query.filter_by(email=email).first()
+    if user:
+        utc_now = datetime.utcnow().replace(tzinfo=pytz.utc)
+        # Check if the last failed login attempt was within the last hour
+        if user.last_failed_login and utc_now - user.last_failed_login < timedelta(hours=1):
+            user.failed_login_attempts += 1
+        else:
+            # Reset if the last attempt was more than an hour ago or if this is the first failure
+            user.failed_login_attempts = 1
+
+        if user.failed_login_attempts >= 5:
+            # Notify the user about the failed attempts
+            flash("You have exceeded the maximum number of login attempts. Please try again in an hour.", "danger")
+            # Email notification logic
+            subject = "Alert: Excessive Login Attempts Detected"
+            html = render_template("accounts/emails/security_alert_email.html")
+#            send_email(subject, user.email, html)
+        user.last_failed_login = now
+        db.session.commit()
+
+
+@accounts_bp.route("/login", methods=["GET", "POST"])
+@logout_required
+def login():
+    form = LoginForm(request.form)
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        utc_now = datetime.utcnow().replace(tzinfo=pytz.utc)
+        if user:
+            # Check if the user is within the lockout period
+            if user.last_failed_login and utc_now - user.last_failed_login < timedelta(hours=1) and user.failed_login_attempts >= 5:
+                flash("Your account has been locked due to too many failed login attempts. Please try again in an hour.", "danger")
+                return render_template("accounts/forms/login.html", form=form)
+            else: 
+                if bcrypt.check_password_hash(user.password, request.form["password"]):
+                   login_user(user)
+                   return redirect(url_for("core.home"))
+                else:
+                   # Call update_failed_attempts here for invalid password
+                   update_failed_attempts(user.email)
+                   flash("Invalid password. Please try again.", "danger")
+        else:
+            flash("Email not found. Please check your email or register.", "danger")
+        return render_template("accounts/forms/login.html", form=form)
+    return render_template("accounts/forms/login.html", form=form)
+
+@accounts_bp.route("/forgot_password", methods=["GET", "POST"])
+@logout_required
+def forgot_password():
+    form = ForgotPasswordForm(request.form)
+    if form.validate_on_submit():
+        # Try to find an existing user entry for the email
+        user = User.query.filter_by(email=form.email.data).first()
+        if user:
+            # Generate a unique token for password reset
+            token = generate_token(user.email)
+            reset_url = url_for("accounts.reset_password", token=token, _external=True)
+            html = render_template("accounts/emails/reset_email.html", reset_url=reset_url)
+            subject = "Password Reset Request"
+            # Send reset link to the user's email
+            send_email(subject, user.email, html)
+            flash(f"Password reset link has been sent to {user.email}.", "success")
+            return redirect(url_for("accounts.forgot_password"))  # Redirect to login page
+        else:
+            flash("Email not found.", "danger")
+    return render_template("accounts/forms/forgot_password.html", form=form)
+
+
+@accounts_bp.route("/reset_password/<token>", methods=["GET", "POST"])
+@logout_required
+def reset_password(token):
+    user_identifier = decode_token(token)  # Extract user's identifier from token
+    if user_identifier == None:
+       flash("The link to reset password is invalid or has expired.", "danger")
+    form = ResetForm(request.form)
+    if form.validate_on_submit():
+        # Try to find an existing user entry for the email
+        user = User.query.filter_by(email=user_identifier).one()
+        # Update the existing entry with new password
+        user.password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+        db.session.commit()
+        flash("Password reset success.", "success")
+
+    return render_template("accounts/forms/reset_password.html", form=form, user_identifier=user_identifier)
+
+
+@accounts_bp.route("/guest", methods=["GET"])
+def home():
+    return render_template("accounts/pages/guest.html")
+
+@accounts_bp.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    flash("You were logged out.", "success")
+    return redirect(url_for("accounts.login"))
+
+
+@accounts_bp.route("/confirm/<token>")
+@login_required
+def confirm_email(token):
+    if current_user.is_confirmed:
+        flash("Account already confirmed.", "success")
+        return redirect(url_for("core.home"))
+    email = confirm_token(token)
+    user = User.query.filter_by(email=current_user.email).first_or_404()
+    if user.email == email:
+        user.is_confirmed = True
+        user.confirmed_on = datetime.now()
+        db.session.add(user)
+        db.session.commit()
+        flash("You have confirmed your account. Thanks!", "success")
+    else:
+        flash("The confirmation link is invalid or has expired.", "danger")
+    return redirect(url_for("core.home"))
+
+
+@accounts_bp.route("/inactive")
+@login_required
+def inactive():
+    if current_user.is_confirmed:
+        return redirect(url_for("core.home"))
+    return render_template("accounts/pages/inactive.html")
+
+
+@accounts_bp.route("/resend")
+@login_required
+def resend_confirmation():
+    if current_user.is_confirmed:
+        flash("Your account has already been confirmed.", "success")
+        return redirect(url_for("core.home"))
+    token = generate_token(current_user.email)
+    confirm_url = url_for("accounts.confirm_email", token=token, _external=True)
+    html = render_template("accounts/emails/confirm_email.html", confirm_url=confirm_url)
+    subject = "Welcome to 3D Printing in TAMK FieldLab"
+    send_email(subject, current_user.email, html)
+    flash("A new confirmation email has been sent.", "success")
+    return redirect(url_for("accounts.inactive"))
+
+@accounts_bp.route("/go_home")
+@login_required
+def go_home():
+    if current_user.is_confirmed:
+        flash("Your account has already been confirmed.", "success")
+        return redirect(url_for("core.home"))
+    flash("Your account has not been confirmed yet.", "warning")
+    return redirect(url_for("accounts.inactive"))
+

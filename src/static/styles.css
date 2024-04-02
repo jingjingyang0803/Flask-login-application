@@ -1,0 +1,73 @@
+.error {
+  color: red;
+  margin-bottom: 5px;
+  text-align: center;
+}
+
+a {
+  text-decoration: none;
+  color: #4e008e;
+}
+a:hover {
+  color: #400075; /* Color when hovered */
+}
+
+.btn-primary-custom {
+  background-color: #4e008e;
+  border-color: #4e008e;
+  color: #ffffff; /* Button text color */
+}
+
+.btn-primary-custom:hover {
+  background-color: #400075; /* Color when hovered */
+  border-color: #400075; /* Border color when hovered */
+  color: #ffffff; /* Button text color */
+}
+
+.text-bg-dark-custom {
+  background-color: #4e008e;
+}
+
+.text-white {
+  color: white;
+}
+
+.btn-danger-custom {
+  background-color: #ffd23f;
+  color: #303135;
+}
+
+.btn-danger-custom:hover {
+  background-color: #400075; /* Button color when hovered */
+  color: #ffffff; /* Button text color */
+}
+
+.footer-text {
+  color: #303135;
+}
+
+.copyright-text {
+  color: #ffffff;
+}
+
+.container-custom {
+  min-height: 53vh;
+}
+
+form i {
+  margin-left: -30px;
+  cursor: pointer;
+}
+
+.printer-btn {
+  background-color: #4e008e;
+  border-color: #4e008e;
+  color: #ffffff; /* Button text color */
+  width: 140px;
+}
+
+.printer-btn:hover {
+  background-color: #400075; /* Color when hovered */
+  border-color: #400075; /* Border color when hovered */
+  color: #ffffff; /* Button text color */
+}

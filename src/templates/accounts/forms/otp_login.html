@@ -1,0 +1,50 @@
+{% extends "_base.html" %} {% block content %}
+<div class="row">
+  <div class="col-md-4"></div>
+  <div class="col-md-4">
+    <main class="form-signin w-100 m-auto">
+      <form role="form" method="post" action="">
+        {{ form.csrf_token }}
+        <input type="hidden" name="action" value="login" />
+        <h1 class="h3 mb-3 fw-normal text-center">
+          Please verify your identity
+        </h1>
+
+        <div class="mb-2">
+          <div class="form-floating">
+            {{ form.email(placeholder="email", class="form-control mb-2") }} {{
+            form.email.label }}
+            <button
+              class="btn btn-outline-secondary position-absolute top-50 end-0 translate-middle-y me-3"
+              type="submit"
+              onclick="this.form.action.value='send_otp';"
+            >
+              Send Code
+            </button>
+          </div>
+          {% if form.email.errors %} {% for error in form.email.errors %}
+          <div class="alert alert-danger" role="alert">{{ error }}</div>
+          {% endfor %} {% endif %}
+        </div>
+
+        <!-- OTP Password Field -->
+        <div class="form-floating mb-2">
+          {{ form.password(class="form-control", placeholder="password") }} {{
+          form.password.label }} {% if form.password.errors %} {% for error in
+          form.password.errors %}
+          <div class="alert alert-danger" role="alert">{{ error }}</div>
+          {% endfor %} {% endif %}
+        </div>
+
+        <button
+          class="w-100 btn btn-lg btn-primary-custom"
+          type="submit"
+          onclick="this.form.action.value='otp_login';"
+        >
+          Log in
+        </button>
+      </form>
+    </main>
+  </div>
+</div>
+{% endblock %}

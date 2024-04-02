@@ -1,0 +1,13 @@
+{% extends "_base.html" %} {% block content %}
+
+<div class="text-center">
+  <h1>Guest Access Denied</h1>
+  <p>As a guest, you cannot access this page.</p>
+  <p>
+    If you want to continue, please
+    <a href="{{ url_for('accounts.register') }}">sign up</a> and login with
+    password.
+  </p>
+</div>
+
+{% endblock %}
