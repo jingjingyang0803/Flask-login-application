@@ -111,29 +111,17 @@ The initial code of this app is sourced from: https://github.com/ashutoshkrris/F
      source venv/bin/activate
      ```
 
-## Check SQLite database
+## Features
 
-```sql
-# Navigate to the directory where the db.sqlite file is located
-cd src
-
-# Run the SQLite command-line interface
-sqlite3 db.sqlite
-
-# List all the tables in the database
-.tables
-
-# View the actual data in the users table
-SELECT * FROM users;
-
-# To delete all records from a table in SQLite
-DELETE FROM users;
-
-# To delete a specific row from a table in SQLite
-# with a condition that identifies the specific row
-# (for example, email = "john.smith@tuni.fi")
-DELETE FROM users WHERE condition;
-
-# Exit the SQLite prompt
-CTRL + D
-```
+1. Implemented Flask login/logout functionality to ensure secure user authentication and session management.
+2. Used a salt value along with URLSafeTimedSerializer to generate tokens for email verification, password reset, and other sensitive operations, adding an additional layer of security to token generation and validation processes.
+3. Utilized bcrypt hashing algorithm to securely hash user passwords before storing them in the database, ensuring that sensitive information remains protected even in the event of a breach.
+4. Restricted login access to only "tuni" users, enhancing security by allowing access only to authorized individuals.
+5. Implemented expiration times for various links sent through email, such as account activation links (1 hour), password reset links (15 minutes), and one-time login verification codes (15 minutes), enhancing security by limiting the window of vulnerability.
+6. Enforced strong password requirements, mandating that user passwords must include at least one lowercase letter, one uppercase letter, one digit, and one special character for a successful registration, thereby enhancing password security and resilience against brute-force attacks.
+7. Implemented a login failure notification system, informing account owners of any unauthorized access attempts(5 login failure within one hour), thereby enhancing security by promptly alerting users to potential threats.
+8. Optimized user interface for smooth navigation, ensuring a seamless and intuitive experience for all users.
+9. Implemented user-friendly messages at each step of the user journey, including notifications and error messages, to provide clear guidance and enhance user satisfaction.
+10. Enabled a password reset feature, empowering users to regain access to their accounts securely in case of forgotten passwords.
+11. Implemented a password field toggle feature, allowing users to conveniently hide or show their passwords as needed, enhancing usability and accessibility.
+12. Implemented custom error pages for HTTP status codes such as 401 (Unauthorized), 404 (Not Found), and 500 (Internal Server Error), providing users with informative and user-friendly error messages in case of unexpected issues, thereby improving user experience and reducing frustration.
