@@ -1,3 +1,9 @@
+# 3D Printer Management System
+We developed a Raspberry Pi-based solution to streamline the management of multiple 3D printers within a network. The project involved integrating the 3D printers into a centralized system that allows for remote monitoring and control through a secure, authenticated interface. This system was further integrated with TAMK’s infrastructure, enabling seamless oversight and management of the printers from a single network, enhancing efficiency and security in the 3D printing process.
+
+we employed Agile and Scrum methodologies to manage development, utilizing Jira and Confluence for task tracking and documentation. As a Full Stack Web Development team, we used Flask on the backend and React with Bootstrap on the frontend, creating a responsive web application. The project ran on Linux, with Python and Bash scripts automating various tasks, and HTML/CSS handling the UI design. We used Git for version control and established CI/CD pipelines for seamless deployment. Additionally, we integrated Raspberry Pi for hardware interfacing and ensured robust Cloud integration. Throughout the project, we maintained ongoing communication with the customer to capture and refine project requirements effectively.
+
+
 # Flask User Authentication With Email Verification
 
 The initial code of this app is sourced from: https://github.com/ashutoshkrris/Flask-User-Authentication-With-Email-Verification
