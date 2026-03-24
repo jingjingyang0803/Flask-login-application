@@ -4,6 +4,8 @@ We developed a Raspberry Pi-based solution to streamline the management of multi
 we employed Agile and Scrum methodologies to manage development, utilizing Jira and Confluence for task tracking and documentation. As a Full Stack Web Development team, we used Flask on the backend and React with Bootstrap on the frontend, creating a responsive web application. The project ran on Linux, with Python and Bash scripts automating various tasks, and HTML/CSS handling the UI design. We used Git for version control and established CI/CD pipelines for seamless deployment. Additionally, we integrated Raspberry Pi for hardware interfacing and ensured robust Cloud integration. Throughout the project, we maintained ongoing communication with the customer to capture and refine project requirements effectively.
 
 
+https://www.youtube.com/watch?v=ebM0KyjfAzE
+
 # Flask User Authentication With Email Verification
 
 The initial code of this app is sourced from: https://github.com/ashutoshkrris/Flask-User-Authentication-With-Email-Verification
